@@ -7,8 +7,9 @@ export default function ExamInterface() {
   const { examId } = useParams();
 
 
-  const videoRef = useRef(null);
+const videoRef = useRef(null);
 const mediaStreamRef = useRef(null);
+const [mediaStream, setMediaStream] = useState(null);
 
 const [cameraStatus, setCameraStatus] = useState('connecting');
 const [micStatus, setMicStatus] = useState('connecting');
@@ -57,9 +58,14 @@ const [mediaError, setMediaError] = useState('');
       }
 
       mediaStreamRef.current = stream;
+      setMediaStream(stream);
 
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
+      
+        videoRef.current.play().catch((error) => {
+          console.error('Camera preview playback failed:', error);
+        });
       }
 
       const videoTrack = stream.getVideoTracks()[0];
@@ -140,21 +146,35 @@ const [mediaError, setMediaError] = useState('');
   
 }, []);
 
-// FIX: Attach the camera stream when the exam interface renders
-useEffect(() => {
-  const video = videoRef.current;
-  const stream = mediaStreamRef.current;
 
-  if (video && stream) {
-    video.srcObject = stream;
+  // Attach the live camera stream whenever the video element is available
+  useEffect(() => {
+    const video = videoRef.current;
 
-    video.play().catch((error) => {
-      console.error('Unable to play camera preview:', error);
-    });
-  }
-}, [loading, exam, questions.length]);
+    if (!video || !mediaStream) return;
 
-const attemptStartedForExam = useRef(null);
+    video.srcObject = mediaStream;
+
+    const startPlayback = () => {
+      video.play().catch((error) => {
+        console.error('Unable to start live camera preview:', error);
+      });
+    };
+
+    video.onloadedmetadata = startPlayback;
+
+    // Handle a stream whose metadata is already loaded
+    if (video.readyState >= 1) {
+      startPlayback();
+    }
+
+    return () => {
+      video.onloadedmetadata = null;
+    };
+  }, [mediaStream, loading, exam, questions.length]);
+
+
+
 
 
   const attemptStartedForExam = useRef(null);

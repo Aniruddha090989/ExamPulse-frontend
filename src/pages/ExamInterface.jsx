@@ -136,6 +136,27 @@ const [mediaError, setMediaError] = useState('');
   };
 }, []);
 
+
+  
+}, []);
+
+// FIX: Attach the camera stream when the exam interface renders
+useEffect(() => {
+  const video = videoRef.current;
+  const stream = mediaStreamRef.current;
+
+  if (video && stream) {
+    video.srcObject = stream;
+
+    video.play().catch((error) => {
+      console.error('Unable to play camera preview:', error);
+    });
+  }
+}, [loading, exam, questions.length]);
+
+const attemptStartedForExam = useRef(null);
+
+
   const attemptStartedForExam = useRef(null);
 
   const getUserId = () => {

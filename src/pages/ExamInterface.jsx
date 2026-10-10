@@ -143,9 +143,6 @@ const [mediaError, setMediaError] = useState('');
 }, []);
 
 
-  
-}, []);
-
 
   // Attach the live camera stream whenever the video element is available
   useEffect(() => {
